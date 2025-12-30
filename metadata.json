@@ -1,0 +1,7 @@
+{
+  "name": "Peace-Token Platform",
+  "description": "A production-grade, mission-critical platform for verifying peace efforts, rewarding peace actors via the PEACE token, and providing DAO-driven governance.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
