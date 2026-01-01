@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ShieldCheck, 
@@ -9,8 +9,11 @@ import {
   Sparkles, 
   Activity,
   Coins,
-  HandHelping
+  HandHelping,
+  Wallet,
+  Loader2
 } from 'lucide-react';
+import { blockchain } from '../services/blockchain';
 
 const FeatureCard = ({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) => (
   <div className="glass p-8 rounded-[2rem] border border-slate-800/50 hover:border-sky-500/30 transition-all group">
@@ -24,6 +27,19 @@ const FeatureCard = ({ icon: Icon, title, desc }: { icon: any, title: string, de
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const handleEnterSanctuary = async () => {
+    if (blockchain.getConnectedAccount()) {
+      navigate('/dashboard');
+      return;
+    }
+    
+    setIsConnecting(true);
+    await blockchain.connect();
+    setIsConnecting(false);
+    navigate('/dashboard');
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0c] selection:bg-sky-500/30 selection:text-sky-200">
@@ -44,13 +60,15 @@ const LandingPage: React.FC = () => {
         <div className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-400 uppercase tracking-widest">
           <button onClick={() => navigate('/manifesto')} className="hover:text-white transition-colors">Manifesto</button>
           <button onClick={() => navigate('/projects')} className="hover:text-white transition-colors">Impact</button>
-          <button onClick={() => navigate('/community')} className="hover:text-white transition-colors">Community</button>
+          <button onClick={() => navigate('/usage')} className="hover:text-white transition-colors">How it works</button>
         </div>
         <button 
-          onClick={() => navigate('/dashboard')}
-          className="px-6 py-3 glass rounded-xl text-sm font-black text-sky-400 hover:bg-sky-500/10 transition-all border border-sky-500/20"
+          onClick={handleEnterSanctuary}
+          disabled={isConnecting}
+          className="px-6 py-3 glass rounded-xl text-sm font-black text-sky-400 hover:bg-sky-500/10 transition-all border border-sky-500/20 flex items-center gap-2"
         >
-          Enter Sanctuary
+          {isConnecting ? <Loader2 size={16} className="animate-spin" /> : <Wallet size={16} />}
+          {isConnecting ? 'Syncing...' : 'Enter Sanctuary'}
         </button>
       </nav>
 
@@ -73,10 +91,10 @@ const LandingPage: React.FC = () => {
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-6 pt-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
             <button 
-              onClick={() => navigate('/dashboard')}
+              onClick={handleEnterSanctuary}
               className="w-full md:w-auto px-10 py-5 peace-gradient rounded-[2rem] text-lg font-black text-white shadow-[0_20px_40px_rgba(14,165,233,0.3)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
             >
-              Join the Movement <ArrowRight size={20} />
+              Start Building Peace <ArrowRight size={20} />
             </button>
             <button 
               onClick={() => navigate('/projects')}
@@ -92,7 +110,7 @@ const LandingPage: React.FC = () => {
           <div className="bg-[#0a0a0c] rounded-[2.5rem] overflow-hidden aspect-[16/9] md:aspect-[21/9] flex flex-col items-center justify-center relative group">
              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(14,165,233,0.1),transparent_70%)]" />
              <Sparkles className="text-sky-500/20 animate-pulse" size={64} />
-             <div className="text-slate-500 text-xs font-mono uppercase tracking-[0.3em] mt-4">Visionary Interface // Active</div>
+             <div className="text-slate-500 text-xs font-mono uppercase tracking-[0.3em] mt-4">Visionary Interface // Production_Active</div>
           </div>
         </div>
       </section>
@@ -119,5 +137,4 @@ const LandingPage: React.FC = () => {
   );
 };
 
-// Add default export to resolve import error in App.tsx
 export default LandingPage;

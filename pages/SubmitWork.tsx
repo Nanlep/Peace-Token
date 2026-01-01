@@ -3,14 +3,16 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PeaceCategory } from '../types';
 import { blockchain } from '../services/blockchain';
+import { storage } from '../services/storage';
 import { validatePeaceWork, ValidationResult } from '../services/ai';
-import { ShieldAlert, CheckCircle2, Loader2, Sparkles, Send, Database, Cloud } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, Loader2, Sparkles, Send, Database, Cloud, Share2, Globe } from 'lucide-react';
 
 const SubmitWork: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(false);
   const [pinning, setPinning] = useState(false);
+  const [shardsPinned, setShardsPinned] = useState<string[]>([]);
   const [aiResult, setAiResult] = useState<ValidationResult | null>(null);
   
   const [formData, setFormData] = useState({
@@ -23,15 +25,22 @@ const SubmitWork: React.FC = () => {
   const handleAiAudit = async () => {
     if (!formData.title || !formData.description) return;
     setValidating(true);
+    setShardsPinned([]);
     try {
       const result = await validatePeaceWork(formData.title, formData.description);
       setAiResult(result);
       
-      // Auto-generate IPFS CID if not present
       if (!formData.evidenceLink) {
         setPinning(true);
-        await new Promise(r => setTimeout(r, 1500));
-        const cid = blockchain.generateCID(formData.description);
+        const shards = storage.getShards();
+        const cid = await storage.broadcastPin(formData.description);
+        
+        // Visual simulation of sharding
+        for (const shard of shards) {
+          await new Promise(r => setTimeout(r, 600));
+          setShardsPinned(prev => [...prev, shard.id]);
+        }
+        
         setFormData(prev => ({ ...prev, evidenceLink: `ipfs://${cid}` }));
         setPinning(false);
       }
@@ -108,7 +117,7 @@ const SubmitWork: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Evidence CID (IPFS Hash)</label>
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Universal Evidence CID (L2 Root)</label>
             <div className="relative">
               <input 
                 className="w-full bg-black/40 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-white font-mono text-xs focus:outline-none"
@@ -117,8 +126,29 @@ const SubmitWork: React.FC = () => {
                 readOnly
               />
               <Database className="absolute left-3 top-3.5 text-slate-500" size={16} />
-              {pinning && <div className="absolute right-4 top-3.5 flex items-center gap-2 text-[10px] text-sky-400 font-bold animate-pulse"><Cloud size={12} /> Pinning...</div>}
+              {pinning && (
+                <div className="absolute right-4 top-3.5 flex items-center gap-2">
+                   <div className="text-[9px] text-sky-400 font-bold animate-pulse flex items-center gap-1">
+                     <Share2 size={10} /> Sharding across nodes...
+                   </div>
+                </div>
+              )}
             </div>
+            
+            {(pinning || shardsPinned.length > 0) && (
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+                {storage.getShards().map((shard) => (
+                  <div key={shard.id} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[9px] font-bold uppercase tracking-tight transition-all ${
+                    shardsPinned.includes(shard.id) 
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)]' 
+                      : 'bg-slate-900 border-slate-800 text-slate-600'
+                  }`}>
+                    <Globe size={10} className={shardsPinned.includes(shard.id) ? '' : 'animate-pulse'} />
+                    {shard.name}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -127,8 +157,8 @@ const SubmitWork: React.FC = () => {
             <div className="flex items-center gap-3">
               <Sparkles className="text-sky-400" size={24} />
               <div>
-                <h3 className="font-bold text-white">Gemini Pre-Audit</h3>
-                <p className="text-xs text-slate-400">Veracity screening and content pinning.</p>
+                <h3 className="font-bold text-white">Gemini Pre-Audit & Shard Broadcast</h3>
+                <p className="text-xs text-slate-400">Veracity screening and redundant gateway pinning.</p>
               </div>
             </div>
             <button 
@@ -137,7 +167,7 @@ const SubmitWork: React.FC = () => {
               onClick={handleAiAudit}
               className="px-5 py-2.5 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-400 text-xs font-black rounded-xl transition-all disabled:opacity-50 uppercase tracking-widest"
             >
-              {validating ? <Loader2 className="animate-spin" size={16} /> : 'Scan & Pin'}
+              {validating ? <Loader2 className="animate-spin" size={16} /> : 'Scan & Broadcast'}
             </button>
           </div>
 

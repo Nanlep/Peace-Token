@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { blockchain } from '../services/blockchain';
 import { SystemMetrics } from '../types';
-import { TrendingUp, Award, Shield, Globe, Loader2, CheckCircle2, FileText } from 'lucide-react';
+import { TrendingUp, Award, Shield, Globe, Loader2, CheckCircle2, FileText, Coins, ArrowUpRight } from 'lucide-react';
 
 const StatCard = ({ label, value, trend, icon: Icon, color }: any) => (
   <div className="glass p-6 rounded-2xl relative overflow-hidden group">
@@ -35,6 +35,8 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     fetchMetrics();
+    const interval = setInterval(fetchMetrics, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleConnectOracle = async () => {
@@ -61,13 +63,13 @@ const Dashboard: React.FC = () => {
   if (!metrics) return null;
 
   const data = [
-    { name: 'Mon', value: 4000 },
-    { name: 'Tue', value: 3000 },
-    { name: 'Wed', value: 2000 },
-    { name: 'Thu', value: 2780 },
-    { name: 'Fri', value: 1890 },
-    { name: 'Sat', value: 2390 },
-    { name: 'Sun', value: 3490 },
+    { name: 'Mon', value: 0.22 },
+    { name: 'Tue', value: 0.24 },
+    { name: 'Wed', value: 0.23 },
+    { name: 'Thu', value: 0.25 },
+    { name: 'Fri', value: 0.28 },
+    { name: 'Sat', value: 0.27 },
+    { name: 'Sun', value: metrics.peacePrice },
   ];
 
   return (
@@ -75,7 +77,7 @@ const Dashboard: React.FC = () => {
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-4xl font-extrabold text-white tracking-tight mb-2">Protocol <span className="text-sky-400">Intelligence</span></h2>
-          <p className="text-slate-400 font-medium">Global peace value distribution and network health analytics.</p>
+          <p className="text-slate-400 font-medium">Global peace value distribution and real-time market telemetry.</p>
         </div>
         <div className="flex gap-3">
           <button 
@@ -99,29 +101,29 @@ const Dashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
-          label="Total Value Locked" 
-          value={`$${(metrics.totalPeaceValueLocked / 1000000).toFixed(2)}M`} 
-          trend="12.4" 
-          icon={Globe} 
-          color="text-sky-400" 
+          label="Market Price (USD)" 
+          value={`$${metrics.peacePrice.toFixed(4)}`} 
+          trend="4.2" 
+          icon={Coins} 
+          color="text-emerald-400" 
         />
         <StatCard 
-          label="Rewards Distributed" 
-          value={`${metrics.totalTokensDistributed.toLocaleString()} PEACE`} 
+          label="LP Pool Depth" 
+          value={`$${(metrics.liquidityDepth / 1000).toFixed(1)}k`} 
           trend="8.1" 
-          icon={Award} 
-          color="text-emerald-400" 
+          icon={Shield} 
+          color="text-sky-400" 
         />
         <StatCard 
           label="Verified Actors" 
           value={metrics.verifiedActors} 
           trend="5.2" 
-          icon={Shield} 
+          icon={Award} 
           color="text-indigo-400" 
         />
         <StatCard 
-          label="Active Projects" 
-          value={metrics.activeProjects} 
+          label="Peace Value Locked" 
+          value={`$${(metrics.totalPeaceValueLocked / 1000000).toFixed(2)}M`} 
           trend="2.9" 
           icon={TrendingUp} 
           color="text-rose-400" 
@@ -131,29 +133,29 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 glass p-8 rounded-3xl">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-lg font-bold">Network Throughput (Peace/Sec)</h3>
-            <select className="bg-slate-900 border border-slate-700 text-xs rounded p-1 outline-none text-slate-400">
-              <option>Last 7 Days</option>
-              <option>Last 30 Days</option>
-            </select>
+            <h3 className="text-lg font-bold">PEACE/USDC Price (L2 Index)</h3>
+            <div className="flex items-center gap-2 text-xs font-mono text-emerald-400">
+               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+               LIVE FEED
+            </div>
           </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#2dd4bf" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#2dd4bf" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
                 <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} />
+                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val.toFixed(2)}`} domain={['dataMin - 0.05', 'dataMax + 0.05']} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px' }}
-                  itemStyle={{ color: '#0ea5e9' }}
+                  itemStyle={{ color: '#2dd4bf' }}
                 />
-                <Area type="monotone" dataKey="value" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorValue)" strokeWidth={3} />
+                <Area type="monotone" dataKey="value" stroke="#2dd4bf" fillOpacity={1} fill="url(#colorValue)" strokeWidth={3} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -182,8 +184,8 @@ const Dashboard: React.FC = () => {
               </div>
             ))}
           </div>
-          <button onClick={handleExport} className="mt-8 w-full py-3 glass rounded-xl text-sm font-bold text-slate-300 hover:text-white transition-colors border border-white/5">
-            View Full Financial Audit
+          <button onClick={handleExport} className="mt-8 w-full py-3 glass rounded-xl text-sm font-bold text-slate-300 hover:text-white transition-colors border border-white/5 flex items-center justify-center gap-2">
+            Audit Smart Contracts <ArrowUpRight size={14} />
           </button>
         </div>
       </div>

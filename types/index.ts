@@ -21,6 +21,9 @@ export interface PeaceActor {
   tier: VerificationTier;
   sbtTokenId?: string;
   joinedAt: number;
+  balance: number; // Claimable PEACE
+  walletBalance: number; // Claimed PEACE in wallet
+  stableBalance: number; // USDC/USDT equivalent
 }
 
 export interface PeaceProject {
@@ -56,6 +59,8 @@ export interface SystemMetrics {
   verifiedActors: number;
   treasuryBalance: number;
   isPaused: boolean;
+  peacePrice: number; // Added for market tracking
+  liquidityDepth: number; // Added for swap health
 }
 
 export interface ReadinessItem {

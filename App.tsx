@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { 
   ShieldCheck, 
   BarChart3, 
@@ -16,8 +16,14 @@ import {
   Scale,
   ShieldAlert,
   HelpCircle,
-  FileCode
+  FileCode,
+  Wallet,
+  Loader2,
+  ChevronDown,
+  LogOut,
+  BadgeCheck
 } from 'lucide-react';
+import { blockchain } from './services/blockchain';
 import Dashboard from './pages/Dashboard';
 import Governance from './pages/Governance';
 import Identity from './pages/Identity';
@@ -34,7 +40,6 @@ import Safety from './pages/Safety';
 import UsageGuide from './pages/UsageGuide';
 import TechnicalSpecs from './pages/TechnicalSpecs';
 
-// Explicitly define prop types to ensure children are recognized
 const SidebarLink: React.FC<{ to: string, icon: any, label: string }> = ({ to, icon: Icon, label }) => (
   <NavLink 
     to={to} 
@@ -50,7 +55,68 @@ const SidebarLink: React.FC<{ to: string, icon: any, label: string }> = ({ to, i
   </NavLink>
 );
 
-// Use React.FC to handle children prop correctly in Route element
+const WalletButton = () => {
+  const [address, setAddress] = useState<string | null>(blockchain.getConnectedAccount());
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const handleConnect = async () => {
+    setIsConnecting(true);
+    const addr = await blockchain.connect();
+    setAddress(addr);
+    setIsConnecting(false);
+  };
+
+  const handleDisconnect = () => {
+    blockchain.disconnect();
+    setAddress(null);
+    setShowDropdown(false);
+  };
+
+  if (address) {
+    return (
+      <div className="relative">
+        <button 
+          onClick={() => setShowDropdown(!showDropdown)}
+          className="flex items-center gap-3 px-4 py-2 glass rounded-xl border border-sky-500/30 text-white hover:bg-white/5 transition-all shadow-lg shadow-sky-500/10"
+        >
+          <div className="w-6 h-6 rounded-full peace-gradient flex items-center justify-center">
+            <BadgeCheck size={14} className="text-white" />
+          </div>
+          <span className="font-mono text-xs">{address.substring(0, 6)}...{address.substring(address.length - 4)}</span>
+          <ChevronDown size={14} className={`transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+        </button>
+        
+        {showDropdown && (
+          <div className="absolute top-full mt-2 right-0 w-48 glass rounded-2xl border border-white/10 p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
+            <button 
+              onClick={handleDisconnect}
+              className="w-full flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all text-xs font-bold uppercase tracking-widest"
+            >
+              <LogOut size={14} /> Disconnect
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <button 
+      onClick={handleConnect}
+      disabled={isConnecting}
+      className="flex items-center gap-3 px-6 py-2.5 peace-gradient rounded-xl text-white font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl shadow-sky-500/20 group"
+    >
+      {isConnecting ? (
+        <Loader2 size={16} className="animate-spin" />
+      ) : (
+        <Wallet size={16} className="group-hover:rotate-12 transition-transform" />
+      )}
+      {isConnecting ? 'Authenticating...' : 'Connect Wallet'}
+    </button>
+  );
+};
+
 const PlatformLayout: React.FC<{ children: React.ReactNode, hideSidebar?: boolean }> = ({ children, hideSidebar = false }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -123,10 +189,8 @@ const PlatformLayout: React.FC<{ children: React.ReactNode, hideSidebar?: boolea
               <span className="text-slate-500">Status:</span>
               <span className="text-emerald-400">Operational</span>
            </div>
-           <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
-                <Users size={18} />
-              </div>
+           <div className="flex items-center gap-6">
+              <WalletButton />
            </div>
         </header>
 
