@@ -6,9 +6,11 @@ export interface ProductionManifest {
   environment: 'PRODUCTION' | 'STAGING';
   hash: string;
   timestamp: number;
+  verdict: 'ABSOLUTE_PASS' | 'CONDITIONAL_PASS' | 'NOT_PASS';
+  tierLabel: string;
   checks: {
     label: string;
-    status: 'READY' | 'FAIL';
+    status: 'READY' | 'FAIL' | 'WARN';
     value: string;
   }[];
 }
@@ -56,12 +58,12 @@ class PeaceBlockchainService {
     this.actors.set(actorId, {
       id: actorId,
       address: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
-      reputationScore: 85,
-      tier: VerificationTier.VERIFIED,
-      joinedAt: Date.now() - 1000000,
-      balance: 1200,
-      walletBalance: 500,
-      stableBalance: 50.00
+      reputationScore: 98,
+      tier: VerificationTier.AUDITED,
+      joinedAt: Date.now() - 2000000,
+      balance: 15000,
+      walletBalance: 2500,
+      stableBalance: 1200.50
     });
 
     this.projects.set('proj_001', {
@@ -81,17 +83,30 @@ class PeaceBlockchainService {
 
   public async getProductionManifest(): Promise<ProductionManifest> {
     const audit = this.runFullAudit();
+    let verdict: 'ABSOLUTE_PASS' | 'CONDITIONAL_PASS' | 'NOT_PASS' = 'NOT_PASS';
+    let tierLabel = '3. NOT PASS';
+    
+    if (audit.score >= 100) {
+      verdict = 'ABSOLUTE_PASS';
+      tierLabel = '1. ABSOLUTE PASS';
+    } else if (audit.score >= 75) {
+      verdict = 'CONDITIONAL_PASS';
+      tierLabel = '2. CONDITIONAL PASS';
+    }
+
     return {
-      version: '4.2.0-STABLE',
+      version: '4.2.2-STABLE-PROD',
       environment: 'PRODUCTION',
-      hash: `0x${Math.random().toString(16).substring(2, 10).toUpperCase()}`,
+      hash: `SH-0x${Math.random().toString(16).substring(2, 10).toUpperCase()}`,
       timestamp: Date.now(),
+      verdict,
+      tierLabel,
       checks: [
-        { label: 'RBAC Security Policy', status: 'READY', value: 'SRE Tiers Enforced' },
-        { label: 'IPFS Shard Resilience', status: audit.score >= 100 ? 'READY' : 'FAIL', value: '3-Node Cluster Active' },
+        { label: 'RBAC Security Policy', status: this.systemHardened ? 'READY' : 'FAIL', value: 'SRE Tiers Enforced' },
+        { label: 'IPFS Shard Resilience', status: this.storageSharded ? 'READY' : 'WARN', value: this.storageSharded ? '3-Node Redundancy' : 'Degraded (Single Node)' },
         { label: 'Gemini AI Pre-Audit', status: 'READY', value: 'Model 3-Flash-Preview' },
-        { label: 'Treasury Stability', status: 'READY', value: `$${(this.metrics.liquidityDepth / 1000).toFixed(1)}k Depth` },
-        { label: 'Oracle Consensus', status: this.oracleConnected ? 'READY' : 'FAIL', value: 'Active / Heartbeat Sync' }
+        { label: 'Treasury Stability', status: this.metrics.liquidityDepth > 100000 ? 'READY' : 'WARN', value: `$${(this.metrics.liquidityDepth / 1000).toFixed(1)}k Depth` },
+        { label: 'Oracle Consensus', status: this.oracleConnected ? 'READY' : 'FAIL', value: this.oracleConnected ? 'Healthy' : 'Disconnected' }
       ]
     };
   }
