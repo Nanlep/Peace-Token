@@ -21,7 +21,8 @@ import {
   FileSearch
 } from 'lucide-react';
 
-const ReadinessHUD = ({ item }: { item: ReadinessItem }) => {
+// Use React.FC for correct prop handling
+const ReadinessHUD: React.FC<{ item: ReadinessItem }> = ({ item }) => {
   const styles = {
     PASS: { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', icon: CheckCircle2 },
     CONDITIONAL: { color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', icon: AlertTriangle },

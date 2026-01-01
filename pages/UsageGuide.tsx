@@ -14,7 +14,8 @@ import {
   HandHelping
 } from 'lucide-react';
 
-const RoleSection = ({ icon: Icon, title, color, children }: { icon: any, title: string, color: string, children: React.ReactNode }) => (
+// Use React.FC to ensure children prop is correctly detected by TypeScript
+const RoleSection: React.FC<{ icon: any, title: string, color: string, children: React.ReactNode }> = ({ icon: Icon, title, color, children }) => (
   <div className="glass p-8 rounded-[2.5rem] border-white/5 space-y-6 relative overflow-hidden group">
     <div className={`absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity ${color}`}>
       <Icon size={120} />

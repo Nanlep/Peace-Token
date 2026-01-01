@@ -34,7 +34,8 @@ import Safety from './pages/Safety';
 import UsageGuide from './pages/UsageGuide';
 import TechnicalSpecs from './pages/TechnicalSpecs';
 
-const SidebarLink = ({ to, icon: Icon, label }: { to: string, icon: any, label: string }) => (
+// Explicitly define prop types to ensure children are recognized
+const SidebarLink: React.FC<{ to: string, icon: any, label: string }> = ({ to, icon: Icon, label }) => (
   <NavLink 
     to={to} 
     className={({ isActive }) => `
@@ -49,7 +50,8 @@ const SidebarLink = ({ to, icon: Icon, label }: { to: string, icon: any, label: 
   </NavLink>
 );
 
-const PlatformLayout = ({ children, hideSidebar = false }: { children: React.ReactNode, hideSidebar?: boolean }) => {
+// Use React.FC to handle children prop correctly in Route element
+const PlatformLayout: React.FC<{ children: React.ReactNode, hideSidebar?: boolean }> = ({ children, hideSidebar = false }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
 
